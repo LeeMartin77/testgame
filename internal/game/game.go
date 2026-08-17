@@ -2,11 +2,17 @@ package game
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/leemartin77/testgame/internal/assets"
 )
 
 func Initialise() Game {
-	return &GameState{}
+	ass, err := assets.LoadAssets()
+	if err != nil {
+		panic(err)
+	}
+	return &GameState{
+		assets: ass,
+	}
 }
 
 type Game interface {
@@ -16,6 +22,7 @@ type Game interface {
 }
 
 type GameState struct {
+	assets assets.Provider
 }
 
 func (g *GameState) Update() error {
@@ -23,7 +30,7 @@ func (g *GameState) Update() error {
 }
 
 func (g *GameState) Draw(screen *ebiten.Image) {
-	ebitenutil.DebugPrint(screen, "Hello, World!")
+	screen.DrawImage(g.assets.ShipsTiles(), &ebiten.DrawImageOptions{})
 }
 
 func (g *GameState) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
