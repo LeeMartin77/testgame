@@ -3,6 +3,8 @@ package game
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/leemartin77/testgame/internal/assets"
+	"github.com/leemartin77/testgame/internal/input"
+	"github.com/leemartin77/testgame/internal/world"
 )
 
 func Initialise() Game {
@@ -12,7 +14,15 @@ func Initialise() Game {
 	}
 	return &GameState{
 		assets: ass,
+		input:  &input.PlayerInput{},
+		world:  world.NewWorld(),
 	}
+}
+
+type GameState struct {
+	assets assets.Provider
+	input  *input.PlayerInput
+	world  world.World
 }
 
 type Game interface {
@@ -21,16 +31,18 @@ type Game interface {
 	Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int)
 }
 
-type GameState struct {
-	assets assets.Provider
-}
-
 func (g *GameState) Update() error {
+	g.input.Update()
+
+	if err := g.world.Update(g.input); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (g *GameState) Draw(screen *ebiten.Image) {
-	screen.DrawImage(g.assets.ShipsTiles(), &ebiten.DrawImageOptions{})
+	g.world.Draw(screen)
 }
 
 func (g *GameState) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
