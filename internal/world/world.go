@@ -2,6 +2,7 @@ package world
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/leemartin77/testgame/internal/assets"
 	"github.com/leemartin77/testgame/internal/input"
 )
 
@@ -10,11 +11,14 @@ type World interface {
 	Draw(screen *ebiten.Image)
 }
 
-func NewWorld() World {
-	return &WorldState{}
+func NewWorld(ass assets.Provider) World {
+	return &WorldState{
+		assets: ass,
+	}
 }
 
 type WorldState struct {
+	assets assets.Provider
 }
 
 // Draw implements [World].

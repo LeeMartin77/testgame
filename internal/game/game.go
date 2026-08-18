@@ -15,7 +15,7 @@ func Initialise() Game {
 	return &GameState{
 		assets: ass,
 		input:  &input.PlayerInput{},
-		world:  world.NewWorld(),
+		world:  world.NewWorld(ass),
 	}
 }
 
