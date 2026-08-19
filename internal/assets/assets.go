@@ -2,6 +2,7 @@ package assets
 
 import (
 	"embed"
+	"image"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -9,11 +10,18 @@ import (
 
 type Provider interface {
 	ShipsTiles() *ebiten.Image
+	PlayerShip() *ebiten.Image
 }
 
 type providerState struct {
 	ships *ebiten.Image
 	tiles *ebiten.Image
+}
+
+// PlayerShip implements [Provider].
+func (p *providerState) PlayerShip() *ebiten.Image {
+	ps := p.ships.SubImage(image.Rect(0, 0, 32, 32)).(*ebiten.Image)
+	return ps
 }
 
 // ShipsTiles implements [Provider].
