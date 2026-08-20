@@ -29,29 +29,36 @@ func (c *Camera) ApplyZoomChange(zc float64) {
 }
 
 func (c *Camera) RenderToScreen(thing RenderableAsset, screen *ebiten.Image) {
-	// screen size
-
-	// align
-	camoff := geometry.Vec2{
-		X: float64(screen.Bounds().Dx()) / 2,
-		Y: float64(screen.Bounds().Dy()) / 2,
-	}
-
-	pos := thing.Pos().OffsetFrom(c.Pos)
 	geom := ebiten.GeoM{}
+
+	c.localTransformationOfAssetImage(thing, &geom)
+
+	c.globalTransformOfAssetImage(thing, screen, &geom)
+
+	screen.DrawImage(thing.Img(), &ebiten.DrawImageOptions{
+		GeoM: geom,
+	})
+}
+
+func (c *Camera) localTransformationOfAssetImage(thing RenderableAsset, geom *ebiten.GeoM) {
 	scl := c.Scale * thing.Scale()
 	w := float64(thing.Img().Bounds().Dx())
 	h := float64(thing.Img().Bounds().Dy())
 	geom.Translate(-w/2, -h/2)
 	geom.Rotate(thing.Rot())
 	geom.Scale(scl, scl)
+}
+
+func (c *Camera) globalTransformOfAssetImage(thing RenderableAsset, screen *ebiten.Image, geom *ebiten.GeoM) {
+	camoff := geometry.Vec2{
+		X: float64(screen.Bounds().Dx()) / 2,
+		Y: float64(screen.Bounds().Dy()) / 2,
+	}
+	pos := thing.Pos().OffsetFrom(c.Pos)
 	geom.Translate(
 		camoff.X+(pos.X*c.Scale),
 		camoff.Y+(pos.Y*c.Scale),
 	)
-	screen.DrawImage(thing.Img(), &ebiten.DrawImageOptions{
-		GeoM: geom,
-	})
 }
 
 func (c *Camera) InView(pos *geometry.Vec2) bool {
