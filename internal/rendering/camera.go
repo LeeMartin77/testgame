@@ -26,11 +26,12 @@ func (c *Camera) RenderToScreen(thing RenderableAsset, screen *ebiten.Image) {
 	}
 
 	pos := thing.Pos().OffsetFrom(c.Pos)
-	//scl := c.Scale * thing.Scale()
 	geom := ebiten.GeoM{}
+	scl := c.Scale * thing.Scale()
+	geom.Scale(scl, scl)
 	geom.Translate(
-		camoff.X+pos.X-float64(thing.Img().Bounds().Dx()/2),
-		camoff.Y+pos.Y-float64(thing.Img().Bounds().Dy()/2),
+		camoff.X+(pos.X*c.Scale)-((float64((thing.Img().Bounds().Dx()))*scl)/2),
+		camoff.Y+(pos.Y*c.Scale)-((float64((thing.Img().Bounds().Dy()))*scl)/2),
 	)
 	screen.DrawImage(thing.Img(), &ebiten.DrawImageOptions{
 		GeoM: geom,
