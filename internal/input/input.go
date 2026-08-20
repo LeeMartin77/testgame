@@ -18,6 +18,8 @@ func NewPlayerInput() *PlayerInput {
 type PlayerInput struct {
 	Vec *geometry.Vec2
 	Rot float64
+
+	CamZoom float64
 }
 
 func (pi *PlayerInput) Update() {
@@ -46,5 +48,14 @@ func (pi *PlayerInput) Update() {
 	} else {
 
 		pi.Rot = 0
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyUp) {
+		pi.CamZoom = 0.25
+	} else if ebiten.IsKeyPressed(ebiten.KeyDown) {
+
+		pi.CamZoom = -0.25
+	} else {
+
+		pi.CamZoom = 0
 	}
 }

@@ -81,5 +81,6 @@ func (w *WorldState) Update(input *input.PlayerInput) error {
 	w.player.Position.X += input.Vec.X
 	w.player.Position.Y += input.Vec.Y
 	w.player.Rotation += input.Rot
+	w.camera.ApplyZoomChange(input.CamZoom)
 	return nil
 }

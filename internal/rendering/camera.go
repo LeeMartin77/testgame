@@ -21,6 +21,13 @@ type RenderableAsset interface {
 	Rot() float64
 }
 
+func (c *Camera) ApplyZoomChange(zc float64) {
+	c.Scale += zc
+	if c.Scale <= 0.25 {
+		c.Scale = 0.25
+	}
+}
+
 func (c *Camera) RenderToScreen(thing RenderableAsset, screen *ebiten.Image) {
 	// screen size
 
