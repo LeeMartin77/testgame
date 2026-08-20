@@ -11,9 +11,14 @@ type Camera struct {
 }
 
 type RenderableAsset interface {
+	// Position in the world
 	Pos() *geometry.Vec2
+	// Scale of the image (distinct from position)
 	Scale() float64
+	// Source image
 	Img() *ebiten.Image
+	// rotation in radians
+	Rot() float64
 }
 
 func (c *Camera) RenderToScreen(thing RenderableAsset, screen *ebiten.Image) {
@@ -28,10 +33,14 @@ func (c *Camera) RenderToScreen(thing RenderableAsset, screen *ebiten.Image) {
 	pos := thing.Pos().OffsetFrom(c.Pos)
 	geom := ebiten.GeoM{}
 	scl := c.Scale * thing.Scale()
+	w := float64(thing.Img().Bounds().Dx())
+	h := float64(thing.Img().Bounds().Dy())
+	geom.Translate(-w/2, -h/2)
+	geom.Rotate(thing.Rot())
 	geom.Scale(scl, scl)
 	geom.Translate(
-		camoff.X+(pos.X*c.Scale)-((float64((thing.Img().Bounds().Dx()))*scl)/2),
-		camoff.Y+(pos.Y*c.Scale)-((float64((thing.Img().Bounds().Dy()))*scl)/2),
+		camoff.X+(pos.X*c.Scale),
+		camoff.Y+(pos.Y*c.Scale),
 	)
 	screen.DrawImage(thing.Img(), &ebiten.DrawImageOptions{
 		GeoM: geom,

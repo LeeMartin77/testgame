@@ -28,14 +28,16 @@ func NewWorld(ass assets.Provider) World {
 			Position: &geometry.Vec2{
 				X: 0, Y: 0,
 			},
-			Size: 0.5,
-			Tile: ass.PlayerShip(),
+			Rotation: 0,
+			Size:     0.5,
+			Tile:     ass.PlayerShip(),
 		},
 	}
 }
 
 type Player struct {
 	Position *geometry.Vec2
+	Rotation float64
 	Size     float64
 	Tile     *ebiten.Image
 }
@@ -63,6 +65,11 @@ func (p *Player) Scale() float64 {
 	return p.Size
 }
 
+// Scale implements [rendering.RenderableAsset].
+func (p *Player) Rot() float64 {
+	return p.Rotation
+}
+
 // Draw implements [World].
 func (w *WorldState) Draw(screen *ebiten.Image) {
 	w.camera.RenderToScreen(w.player, screen)
@@ -73,5 +80,6 @@ func (w *WorldState) Draw(screen *ebiten.Image) {
 func (w *WorldState) Update(input *input.PlayerInput) error {
 	w.player.Position.X += input.Vec.X
 	w.player.Position.Y += input.Vec.Y
+	w.player.Rotation += input.Rot
 	return nil
 }
