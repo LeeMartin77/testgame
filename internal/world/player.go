@@ -36,8 +36,8 @@ func NewPlayer(ass assets.Provider) *Player {
 			X: 0, Y: 0,
 		},
 
-		ShipPower:         0.1,
-		ShipDrag:          1,
+		ShipPower:         0.5,
+		ShipDrag:          0.03,
 		ShipRotationSpeed: 1,
 	}
 }
@@ -67,6 +67,12 @@ func (p *Player) Update(input *input.PlayerInput) {
 
 	p.Position.X += p.Velocity.X
 	p.Position.Y += p.Velocity.Y
+
+	dragScale := p.ShipDrag * (math.Abs(p.Velocity.X) + math.Abs(p.Velocity.Y))
+
+	p.Velocity.X = p.Velocity.X + (-1 * dragScale * p.Velocity.X)
+	p.Velocity.Y = p.Velocity.Y + (-1 * dragScale * p.Velocity.Y)
+
 }
 
 func (p *Player) handleInput(input *input.PlayerInput) {
