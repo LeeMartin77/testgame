@@ -23,9 +23,9 @@ type PlayerInput struct {
 }
 
 func (pi *PlayerInput) Update() {
-	if ebiten.IsKeyPressed(ebiten.KeyW) {
+	if ebiten.IsKeyPressed(ebiten.KeyA) {
 		pi.Vec.Y = -1
-	} else if ebiten.IsKeyPressed(ebiten.KeyS) {
+	} else if ebiten.IsKeyPressed(ebiten.KeyW) {
 
 		pi.Vec.Y = 1
 	} else {
