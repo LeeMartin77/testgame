@@ -19,6 +19,7 @@ type Player struct {
 
 	ShipPower         float64
 	ShipDrag          float64
+	ShipSpeedLimit    float64
 	ShipRotationSpeed float64
 }
 
@@ -37,7 +38,8 @@ func NewPlayer(ass assets.Provider) *Player {
 		},
 
 		ShipPower:         0.5,
-		ShipDrag:          0.03,
+		ShipDrag:          0.1,
+		ShipSpeedLimit:    10,
 		ShipRotationSpeed: 1,
 	}
 }
@@ -62,26 +64,38 @@ func (p *Player) Rot() float64 {
 	return p.Rotation
 }
 
+// Remember - 60 Tick rate
 func (p *Player) Update(input *input.PlayerInput) {
-	p.handleInput(input)
+	if !p.handleInput(input) {
+
+		dragScale := ILerp(0, p.ShipSpeedLimit, p.Velocity.Magnitude()) * p.ShipDrag
+
+		p.Velocity.X = p.Velocity.X + (-1 * dragScale * p.Velocity.X)
+		p.Velocity.Y = p.Velocity.Y + (-1 * dragScale * p.Velocity.Y)
+	}
 
 	p.Position.X += p.Velocity.X
 	p.Position.Y += p.Velocity.Y
 
-	dragScale := p.ShipDrag * (math.Abs(p.Velocity.X) + math.Abs(p.Velocity.Y))
-
-	p.Velocity.X = p.Velocity.X + (-1 * dragScale * p.Velocity.X)
-	p.Velocity.Y = p.Velocity.Y + (-1 * dragScale * p.Velocity.Y)
-
 }
 
-func (p *Player) handleInput(input *input.PlayerInput) {
+func (p *Player) handleInput(input *input.PlayerInput) bool {
 	speedadd := float64(0)
 	if input.Vec.Y > 0 {
 		speedadd = input.Vec.Y * p.ShipPower
 	}
+
+	speedadd = (1 - ILerp(0, p.ShipSpeedLimit, p.Velocity.Magnitude())) * speedadd
+
 	p.Velocity.X += speedadd * math.Sin(p.Rotation)
 	p.Velocity.Y += -1 * speedadd * math.Cos(p.Rotation)
 
 	p.Rotation += input.Rot * p.ShipRotationSpeed
+	return input.Vec.Y > 0
+}
+
+// Get the interpolant within a range
+func ILerp(a, b, v float64) float64 {
+	// https://en.wikipedia.org/wiki/Linear_interpolation
+	return (v - a) / (b - a)
 }
