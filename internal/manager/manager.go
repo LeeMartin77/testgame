@@ -5,6 +5,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/leemartin77/testgame/internal/game"
 	"github.com/leemartin77/testgame/internal/input"
 )
@@ -15,8 +16,57 @@ func NewMenu() Manager {
 
 		menuselected: "playsolo",
 
-		menu: homeoptions,
+		menu:    homeoptions,
+		options: defaultoptions,
+
+		waitingforinput:     false,
+		waitingforinputchan: make(chan ebiten.Key),
 	}
+}
+
+var homeoption = MenuOption{"Home", func(ms *ManagerState) error {
+	if input.Valid(ms.input.Controls) {
+		ms.menuselected = "playsolo"
+		ms.menu = homeoptions
+	}
+	return nil
+}}
+
+var settingsoption = MenuOption{"Settings", func(ms *ManagerState) error {
+	ms.menuselected = "home"
+	ms.menu = settingoptions
+	return nil
+}}
+
+var defaultoptions = map[string]MenuOption{
+	"playsolo": {"Play Solo", func(ms *ManagerState) error {
+		return ms.startgame()
+	}},
+	"settings": settingsoption,
+	"home":     homeoption,
+	"configurecontrols": {"Configure Controls", func(ms *ManagerState) error {
+		ms.menuselected = input.ControlList[0]
+		ms.menu = input.ControlList
+		ms.menu = append(ms.menu, "settings")
+
+		for _, k := range input.ControlList {
+			ms.options[k] = MenuOption{
+				label: "Set " + input.ControlLabels[k],
+				action: func(mss *ManagerState) error {
+					mss.waitingforinput = true
+					go func() {
+						newkey := <-mss.waitingforinputchan
+						input.Update(mss.input.Controls, k, newkey)
+						mss.waitingforinput = false
+					}()
+					return nil
+				},
+			}
+		}
+
+		ms.options["settings"] = settingsoption
+		return nil
+	}},
 }
 
 type Manager interface {
@@ -33,27 +83,16 @@ type ManagerState struct {
 	menuselected string
 	menu         []string
 
+	options map[string]MenuOption
+
+	waitingforinput     bool
+	waitingforinputchan chan ebiten.Key
+
 	lastinput input.PlayerInput
 }
 
-var options = map[string]MenuOption{
-	"playsolo": {"Play Solo", func(ms *ManagerState) error {
-		return ms.startgame()
-	}},
-	"settings": {"Settings", func(ms *ManagerState) error {
-		ms.menuselected = "home"
-		ms.menu = settingoptions
-		return nil
-	}},
-	"home": {"Home", func(ms *ManagerState) error {
-		ms.menuselected = "playsolo"
-		ms.menu = homeoptions
-		return nil
-	}},
-}
-
 var homeoptions = []string{"playsolo", "settings"}
-var settingoptions = []string{"home"}
+var settingoptions = []string{"configurecontrols", "home"}
 
 type MenuOption struct {
 	label  string
@@ -73,7 +112,7 @@ func (g *ManagerState) Draw(screen *ebiten.Image) {
 		} else {
 			menustring += "  "
 		}
-		menustring += options[opt].label + "\n"
+		menustring += g.options[opt].label + "\n"
 	}
 	ebitenutil.DebugPrint(screen, menustring)
 	ebitenutil.DebugPrintAt(screen, g.controlsummary(), 200, 40)
@@ -97,6 +136,9 @@ func (g *ManagerState) controlsummary() string {
 		}
 		str += "\n"
 	}
+	if !input.Valid(g.input.Controls) {
+		str += "\n\n Controls invalid - you cannot leave til all controls have buttons"
+	}
 	return str
 }
 
@@ -107,6 +149,15 @@ func (g *ManagerState) Update() error {
 		return g.game.Update(g.input)
 	}
 
+	// special state where we're just waiting for the next input
+	if g.waitingforinput {
+		justpressed := inpututil.AppendJustPressedKeys([]ebiten.Key{})
+		if len(justpressed) > 0 {
+			g.waitingforinput = false
+			g.waitingforinputchan <- justpressed[0]
+		}
+	}
+
 	// we should only do something if the input state changes
 	// (trying to capture the idea of "just pressed")
 	if !g.input.HasChangedFrom(&g.lastinput) {
@@ -115,7 +166,7 @@ func (g *ManagerState) Update() error {
 	g.lastinput = g.input.CopyOf()
 
 	if g.input.Rot > 0 {
-		opt, ok := options[g.menuselected]
+		opt, ok := g.options[g.menuselected]
 		if ok {
 			return opt.action(g)
 		}
@@ -123,9 +174,9 @@ func (g *ManagerState) Update() error {
 	menuidx := slices.Index(g.menu, g.menuselected)
 	menulen := len(g.menu)
 	if g.input.CamZoom > 0 {
-		menuidx += 1
-	} else if g.input.CamZoom < 0 {
 		menuidx -= 1
+	} else if g.input.CamZoom < 0 {
+		menuidx += 1
 	}
 
 	if menuidx > menulen-1 {
