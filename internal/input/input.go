@@ -24,6 +24,23 @@ type PlayerInput struct {
 	Exit bool
 }
 
+func (pi *PlayerInput) CopyOf() PlayerInput {
+	return PlayerInput{
+		Vec:     pi.Vec.Clone(),
+		Rot:     pi.Rot,
+		CamZoom: pi.CamZoom,
+		Exit:    pi.Exit,
+	}
+}
+
+func (pi *PlayerInput) HasChangedFrom(pi2 *PlayerInput) bool {
+	if pi2 == nil {
+		// it's changed if it's never happened, duh
+		return true
+	}
+	return !pi.Vec.Equal(pi2.Vec) || pi.Rot != pi2.Rot || pi.CamZoom != pi2.CamZoom || pi.Exit != pi2.Exit
+}
+
 func (pi *PlayerInput) Update() {
 	// we're getting outta here!!
 	pi.Exit = ebiten.IsKeyPressed(ebiten.KeyEscape)

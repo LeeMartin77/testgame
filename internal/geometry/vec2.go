@@ -21,3 +21,16 @@ func (v *Vec2) Magnitude() float64 {
 	}
 	return r
 }
+
+func (v *Vec2) Clone() *Vec2 {
+	return &Vec2{
+		X: v.X, Y: v.Y,
+	}
+}
+
+func (v *Vec2) Equal(v2 *Vec2) bool {
+	if v2 == nil {
+		return false
+	}
+	return v.X == v2.X && v.Y == v2.Y
+}
