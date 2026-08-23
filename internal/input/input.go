@@ -20,9 +20,14 @@ type PlayerInput struct {
 	Rot float64
 
 	CamZoom float64
+
+	Exit bool
 }
 
 func (pi *PlayerInput) Update() {
+	// we're getting outta here!!
+	pi.Exit = ebiten.IsKeyPressed(ebiten.KeyEscape)
+
 	if ebiten.IsKeyPressed(ebiten.KeyA) {
 		pi.Vec.Y = -1
 	} else if ebiten.IsKeyPressed(ebiten.KeyW) {

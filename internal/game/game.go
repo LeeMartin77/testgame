@@ -7,34 +7,42 @@ import (
 	"github.com/leemartin77/testgame/internal/world"
 )
 
-func Initialise() Game {
+func Initialise() (Game, chan struct{}, error) {
 	ass, err := assets.LoadAssets()
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
+	exitchan := make(chan struct{})
 	return &GameState{
 		assets: ass,
 		input:  input.NewPlayerInput(),
 		world:  world.NewWorld(ass),
-	}
+
+		exit: exitchan,
+	}, exitchan, nil
 }
 
 type GameState struct {
 	assets assets.Provider
 	input  *input.PlayerInput
 	world  world.World
+
+	exit chan struct{}
 }
 
 type Game interface {
-	Update() error
+	Update(*input.PlayerInput) error
 	Draw(screen *ebiten.Image)
 	Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int)
 }
 
-func (g *GameState) Update() error {
-	g.input.Update()
-
-	if err := g.world.Update(g.input); err != nil {
+func (g *GameState) Update(input *input.PlayerInput) error {
+	if input.Exit {
+		// this should end up vaguely blocking but it's a good thing
+		g.exit <- struct{}{}
+		return nil
+	}
+	if err := g.world.Update(input); err != nil {
 		return err
 	}
 
