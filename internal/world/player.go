@@ -40,7 +40,7 @@ func NewPlayer(ass assets.Provider) *Player {
 		ShipPower:         0.5,
 		ShipDrag:          0.1,
 		ShipSpeedLimit:    10,
-		ShipRotationSpeed: 1,
+		ShipRotationSpeed: 0.25,
 	}
 }
 

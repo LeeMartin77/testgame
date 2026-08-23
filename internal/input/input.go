@@ -1,19 +1,11 @@
 package input
 
 import (
+	"slices"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/leemartin77/testgame/internal/geometry"
 )
-
-func NewPlayerInput() *PlayerInput {
-	return &PlayerInput{
-		Vec: &geometry.Vec2{
-			X: 0,
-			Y: 0,
-		},
-		Rot: 0,
-	}
-}
 
 type PlayerInput struct {
 	Vec *geometry.Vec2
@@ -22,6 +14,8 @@ type PlayerInput struct {
 	CamZoom float64
 
 	Exit bool
+
+	Controls ConfiguredControls
 }
 
 func (pi *PlayerInput) CopyOf() PlayerInput {
@@ -41,43 +35,122 @@ func (pi *PlayerInput) HasChangedFrom(pi2 *PlayerInput) bool {
 	return !pi.Vec.Equal(pi2.Vec) || pi.Rot != pi2.Rot || pi.CamZoom != pi2.CamZoom || pi.Exit != pi2.Exit
 }
 
-func (pi *PlayerInput) Update() {
-	// we're getting outta here!!
-	pi.Exit = ebiten.IsKeyPressed(ebiten.KeyEscape)
+func NewPlayerInput() *PlayerInput {
+	return &PlayerInput{
+		Vec: &geometry.Vec2{
+			X: 0,
+			Y: 0,
+		},
+		Rot:     0,
+		CamZoom: 0,
+		Exit:    false,
 
-	if ebiten.IsKeyPressed(ebiten.KeyA) {
-		pi.Vec.Y = -1
-	} else if ebiten.IsKeyPressed(ebiten.KeyW) {
+		Controls: ConfiguredControls{
+			"accelerate":   {ebiten.KeyW},
+			"decelerate":   {ebiten.KeyS},
+			"strafe_left":  {ebiten.KeyA},
+			"strafe_right": {ebiten.KeyD},
+			"spin_ccw":     {ebiten.KeyLeft},
+			"spin_cw":      {ebiten.KeyRight},
 
-		pi.Vec.Y = 1
-	} else {
-		pi.Vec.Y = 0
+			"up":   {ebiten.KeyUp},
+			"down": {ebiten.KeyDown},
+
+			"exitgame": {ebiten.KeyEscape},
+		},
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyA) {
-		pi.Vec.X = -1
-	} else if ebiten.IsKeyPressed(ebiten.KeyD) {
+}
 
-		pi.Vec.X = 1
-	} else {
+type ConfiguredControls = map[string][]ebiten.Key
 
-		pi.Vec.X = 0
+func Valid(cnf ConfiguredControls) bool {
+	for _, cl := range ControlList {
+		vl, ok := cnf[cl]
+		if !ok || len(vl) == 0 {
+			return false
+		}
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
-		pi.Rot = -0.25
-	} else if ebiten.IsKeyPressed(ebiten.KeyRight) {
+	return true
+}
 
-		pi.Rot = 0.25
-	} else {
-
-		pi.Rot = 0
+func Update(cnf ConfiguredControls, cmd string, newkey ebiten.Key) ConfiguredControls {
+	// prune from any existing controls
+	for k, v := range cnf {
+		i := slices.Index(v, newkey)
+		if i > -1 {
+			cnf[k] = append(v[:i], v[i+1:]...)
+		}
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyUp) {
+	// add to control
+	cnf[cmd] = append(cnf[cmd], newkey)
+	return cnf
+}
+
+var ControlList = []string{
+	"accelerate",
+	"decelerate",
+	"track_left",
+	"track_right",
+	"spin_ccw",
+	"spin_cw",
+
+	"up",
+	"down",
+
+	"exitgame",
+}
+
+var controlactions = map[string]func(pi *PlayerInput){
+	"accelerate": func(pi *PlayerInput) {
+		pi.Vec.Y += 1
+	},
+	"decelerate": func(pi *PlayerInput) {
+		pi.Vec.Y -= 1
+	},
+	"track_left": func(pi *PlayerInput) {
+		pi.Vec.X -= 1
+	},
+	"track_right": func(pi *PlayerInput) {
+		pi.Vec.X += 1
+	},
+	"spin_ccw": func(pi *PlayerInput) {
+		pi.Rot -= 1
+
+	},
+	"spin_cw": func(pi *PlayerInput) {
+		pi.Rot += 1
+	},
+
+	"up": func(pi *PlayerInput) {
 		pi.CamZoom = 0.25
-	} else if ebiten.IsKeyPressed(ebiten.KeyDown) {
-
+	},
+	"down": func(pi *PlayerInput) {
 		pi.CamZoom = -0.25
-	} else {
+	},
+	"exitgame": func(pi *PlayerInput) {
+		pi.Exit = true
+	},
+}
 
-		pi.CamZoom = 0
+func (pi *PlayerInput) reset() {
+	// makes it easier
+	pi.Exit = false
+	pi.Vec.Y = 0
+	pi.Vec.X = 0
+	pi.Rot = 0
+	pi.CamZoom = 0
+}
+
+func (pi *PlayerInput) Update() {
+	pi.reset()
+
+	for _, ctrl := range ControlList {
+		btns := pi.Controls[ctrl]
+		for _, btn := range btns {
+			if ebiten.IsKeyPressed(btn) {
+				controlactions[ctrl](pi)
+				break // we only register once otherwise hell breaks out
+			}
+		}
 	}
 }
