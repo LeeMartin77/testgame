@@ -76,7 +76,28 @@ func (g *ManagerState) Draw(screen *ebiten.Image) {
 		menustring += options[opt].label + "\n"
 	}
 	ebitenutil.DebugPrint(screen, menustring)
+	ebitenutil.DebugPrintAt(screen, g.controlsummary(), 200, 40)
 	return
+}
+
+func (g *ManagerState) controlsummary() string {
+	str := ""
+	for _, ctrl := range input.ControlList {
+		keys := g.input.Controls[ctrl]
+		str += input.ControlLabels[ctrl] + ": "
+		if len(keys) == 0 {
+			str += "none! (this is a problem)"
+		} else {
+			for i, k := range keys {
+				if i > 0 {
+					str += ", "
+				}
+				str += k.String()
+			}
+		}
+		str += "\n"
+	}
+	return str
 }
 
 // Update implements [Manager].

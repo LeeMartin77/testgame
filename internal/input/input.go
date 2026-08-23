@@ -46,12 +46,12 @@ func NewPlayerInput() *PlayerInput {
 		Exit:    false,
 
 		Controls: ConfiguredControls{
-			"accelerate":   {ebiten.KeyW},
-			"decelerate":   {ebiten.KeyS},
-			"strafe_left":  {ebiten.KeyA},
-			"strafe_right": {ebiten.KeyD},
-			"spin_ccw":     {ebiten.KeyLeft},
-			"spin_cw":      {ebiten.KeyRight},
+			"accelerate":  {ebiten.KeyW},
+			"decelerate":  {ebiten.KeyS},
+			"track_left":  {ebiten.KeyA},
+			"track_right": {ebiten.KeyD},
+			"spin_ccw":    {ebiten.KeyLeft},
+			"spin_cw":     {ebiten.KeyRight},
 
 			"up":   {ebiten.KeyUp},
 			"down": {ebiten.KeyDown},
@@ -98,6 +98,20 @@ var ControlList = []string{
 	"down",
 
 	"exitgame",
+}
+
+var ControlLabels = map[string]string{
+	"accelerate":  "Accelerate",
+	"decelerate":  "Decelerate",
+	"track_left":  "Track Left",
+	"track_right": "Track Right",
+	"spin_ccw":    "Spin Counterclockwise",
+	"spin_cw":     "Spin Clockwise",
+
+	"up":   "Cam Zoom In",
+	"down": "Cam Zoom Out",
+
+	"exitgame": "Exit Game",
 }
 
 var controlactions = map[string]func(pi *PlayerInput){
