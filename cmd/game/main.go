@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	ebiten.SetWindowSize(640, 480)
+	ebiten.SetWindowSize(1280, 800)
 	ebiten.SetWindowTitle("Testgame")
 	if err := ebiten.RunGame(game.Initialise()); err != nil {
 		log.Fatal(err)
