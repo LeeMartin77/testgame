@@ -35,6 +35,23 @@ func (pi *PlayerInput) HasChangedFrom(pi2 *PlayerInput) bool {
 	return !pi.Vec.Equal(pi2.Vec) || pi.Rot != pi2.Rot || pi.CamZoom != pi2.CamZoom || pi.Exit != pi2.Exit
 }
 
+func DefaultControls() ConfiguredControls {
+
+	return ConfiguredControls{
+		"accelerate":  {ebiten.KeyW},
+		"decelerate":  {ebiten.KeyS},
+		"track_left":  {ebiten.KeyA},
+		"track_right": {ebiten.KeyD},
+		"spin_ccw":    {ebiten.KeyLeft},
+		"spin_cw":     {ebiten.KeyRight},
+
+		"up":   {ebiten.KeyUp},
+		"down": {ebiten.KeyDown},
+
+		"exitgame": {ebiten.KeyEscape},
+	}
+}
+
 func NewPlayerInput() *PlayerInput {
 	return &PlayerInput{
 		Vec: &geometry.Vec2{
@@ -45,19 +62,7 @@ func NewPlayerInput() *PlayerInput {
 		CamZoom: 0,
 		Exit:    false,
 
-		Controls: ConfiguredControls{
-			"accelerate":  {ebiten.KeyW},
-			"decelerate":  {ebiten.KeyS},
-			"track_left":  {ebiten.KeyA},
-			"track_right": {ebiten.KeyD},
-			"spin_ccw":    {ebiten.KeyLeft},
-			"spin_cw":     {ebiten.KeyRight},
-
-			"up":   {ebiten.KeyUp},
-			"down": {ebiten.KeyDown},
-
-			"exitgame": {ebiten.KeyEscape},
-		},
+		Controls: DefaultControls(),
 	}
 }
 

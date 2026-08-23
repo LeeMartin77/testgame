@@ -19,7 +19,7 @@ func NewMenu() Manager {
 		menu:    homeoptions,
 		options: defaultoptions,
 
-		waitingforinput:     false,
+		waitingforinput:     "",
 		waitingforinputchan: make(chan ebiten.Key),
 	}
 }
@@ -47,21 +47,30 @@ var defaultoptions = map[string]MenuOption{
 	"configurecontrols": {"Configure Controls", func(ms *ManagerState) error {
 		ms.menuselected = input.ControlList[0]
 		ms.menu = input.ControlList
+		ms.menu = append(ms.menu, "resetcontrols")
 		ms.menu = append(ms.menu, "settings")
 
 		for _, k := range input.ControlList {
 			ms.options[k] = MenuOption{
 				label: "Set " + input.ControlLabels[k],
 				action: func(mss *ManagerState) error {
-					mss.waitingforinput = true
+					mss.waitingforinput = k
 					go func() {
 						newkey := <-mss.waitingforinputchan
 						input.Update(mss.input.Controls, k, newkey)
-						mss.waitingforinput = false
+						mss.waitingforinput = ""
 					}()
 					return nil
 				},
 			}
+		}
+
+		ms.options["resetcontrols"] = MenuOption{
+			label: "Reset Controls",
+			action: func(mss *ManagerState) error {
+				mss.input.Controls = input.DefaultControls()
+				return nil
+			},
 		}
 
 		ms.options["settings"] = settingsoption
@@ -85,7 +94,7 @@ type ManagerState struct {
 
 	options map[string]MenuOption
 
-	waitingforinput     bool
+	waitingforinput     string
 	waitingforinputchan chan ebiten.Key
 
 	lastinput input.PlayerInput
@@ -122,7 +131,11 @@ func (g *ManagerState) Draw(screen *ebiten.Image) {
 func (g *ManagerState) controlsummary() string {
 	str := ""
 	for _, ctrl := range input.ControlList {
+
 		keys := g.input.Controls[ctrl]
+		if g.waitingforinput == ctrl {
+			str += "> "
+		}
 		str += input.ControlLabels[ctrl] + ": "
 		if len(keys) == 0 {
 			str += "none! (this is a problem)"
@@ -135,6 +148,9 @@ func (g *ManagerState) controlsummary() string {
 			}
 		}
 		str += "\n"
+	}
+	if g.waitingforinput != "" {
+		str += "\n\n Next press will be assigned to [" + input.ControlLabels[g.waitingforinput] + "]"
 	}
 	if !input.Valid(g.input.Controls) {
 		str += "\n\n Controls invalid - you cannot leave til all controls have buttons"
@@ -150,10 +166,10 @@ func (g *ManagerState) Update() error {
 	}
 
 	// special state where we're just waiting for the next input
-	if g.waitingforinput {
+	if g.waitingforinput != "" {
 		justpressed := inpututil.AppendJustPressedKeys([]ebiten.Key{})
 		if len(justpressed) > 0 {
-			g.waitingforinput = false
+			g.waitingforinput = ""
 			g.waitingforinputchan <- justpressed[0]
 		}
 	}
