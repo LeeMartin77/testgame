@@ -47,6 +47,6 @@ func (w *WorldState) Update(input *input.PlayerInput) error {
 	w.camera.ApplyZoomChange(input.CamZoom)
 	w.player.Update(input)
 
-	ApplyVelocity(w.player)
+	ApplyPhysics(w.player)
 	return nil
 }

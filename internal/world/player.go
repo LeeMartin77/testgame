@@ -13,15 +13,19 @@ type Player struct {
 	Position *geometry.Vec2
 	Radius   float64
 
-	Velocity *geometry.Vec2
+	Velocity      *geometry.Vec2
+	RotationSpeed float64
 
 	Rotation float64
 	Tile     *ebiten.Image
 
-	ShipPower         float64
-	ShipDrag          float64
-	ShipSpeedLimit    float64
-	ShipRotationSpeed float64
+	ShipPower      float64
+	ShipDrag       float64
+	ShipSpeedLimit float64
+
+	ShipRotationPower      float64
+	ShipRotationDrag       float64
+	ShipRotationSpeedLimit float64
 }
 
 func NewPlayer(ass assets.Provider) *Player {
@@ -36,13 +40,17 @@ func NewPlayer(ass assets.Provider) *Player {
 		Velocity: &geometry.Vec2{
 			X: 0, Y: 0,
 		},
+		RotationSpeed: 0,
 
 		Tile: ass.PlayerShip(),
 
-		ShipPower:         0.5,
-		ShipDrag:          0.1,
-		ShipSpeedLimit:    10,
-		ShipRotationSpeed: 0.25,
+		ShipRotationPower:      0.001,
+		ShipRotationDrag:       3,
+		ShipRotationSpeedLimit: 1,
+
+		ShipPower:      0.5,
+		ShipDrag:       0.1,
+		ShipSpeedLimit: 10,
 	}
 }
 
@@ -70,19 +78,19 @@ func (p *Player) Rot() float64 {
 	return p.Rotation
 }
 
-// Remember - 60 Tick rate
-func (p *Player) Update(input *input.PlayerInput) {
-	if !p.handleInput(input) {
-
-		dragScale := ILerp(0, p.ShipSpeedLimit, p.Velocity.Magnitude()) * p.ShipDrag
-
-		p.Velocity.X = p.Velocity.X + (-1 * dragScale * p.Velocity.X)
-		p.Velocity.Y = p.Velocity.Y + (-1 * dragScale * p.Velocity.Y)
-	}
+// Scale implements [world.PhysicsObject].
+func (p *Player) RotSpd() float64 {
+	return p.RotationSpeed
 }
 
-// returns if ship under thrust
-func (p *Player) handleInput(input *input.PlayerInput) bool {
+func (p *Player) SetRot(n float64) {
+	p.Rotation = n
+}
+
+// Remember - 60 Tick rate
+func (p *Player) Update(input *input.PlayerInput) {
+
+	// Thrust or drag
 	if input.Vec.Y > 0 {
 		speedadd := input.Vec.Y * p.ShipPower
 
@@ -90,10 +98,26 @@ func (p *Player) handleInput(input *input.PlayerInput) bool {
 
 		p.Velocity.X += speedadd * math.Sin(p.Rotation)
 		p.Velocity.Y += -1 * speedadd * math.Cos(p.Rotation)
-	}
-	p.Rotation += input.Rot * p.ShipRotationSpeed
+	} else {
+		dragScale := ILerp(0, p.ShipSpeedLimit, p.Velocity.Magnitude()) * p.ShipDrag
 
-	return input.Vec.Y > 0
+		p.Velocity.X = p.Velocity.X + (-1 * dragScale * p.Velocity.X)
+		p.Velocity.Y = p.Velocity.Y + (-1 * dragScale * p.Velocity.Y)
+	}
+
+	// Rotate or drag
+	if input.Rot != 0 {
+		rotspdadd := input.Rot * p.ShipRotationPower
+		rotspdadd = (1 - ILerp(0, p.ShipRotationSpeedLimit, p.RotationSpeed)) * rotspdadd
+		p.RotationSpeed += rotspdadd
+	} else {
+		dragScale := ILerp(0, p.ShipRotationSpeedLimit, math.Abs(p.RotationSpeed)) * p.ShipRotationDrag
+		p.RotationSpeed *= 1 - dragScale
+		p.RotationSpeed = math.Max(-p.ShipRotationSpeedLimit, math.Min(p.RotationSpeed, p.ShipRotationSpeedLimit))
+		if math.Abs(p.RotationSpeed) < 1e-6 {
+			p.RotationSpeed = 0
+		}
+	}
 }
 
 // Get the interpolant within a range

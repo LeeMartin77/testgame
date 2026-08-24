@@ -11,9 +11,22 @@ type PhysicsObject interface {
 	Vel() *geometry.Vec2
 	// Radius
 	Rad() float64
+
+	RotSpd() float64
+	Rot() float64
+	SetRot(float64)
+}
+
+func ApplyPhysics(po PhysicsObject) {
+	ApplyVelocity(po)
+	ApplyRotation(po)
 }
 
 func ApplyVelocity(po PhysicsObject) {
 	po.Pos().X += po.Vel().X
 	po.Pos().Y += po.Vel().Y
+}
+
+func ApplyRotation(po PhysicsObject) {
+	po.SetRot(po.Rot() + po.RotSpd())
 }
