@@ -13,8 +13,8 @@ type Camera struct {
 type RenderableAsset interface {
 	// Position in the world
 	Pos() *geometry.Vec2
-	// Scale of the image (distinct from position)
-	Scale() float64
+	// Radius of the image (distinct from position)
+	Rad() float64
 	// Source image
 	Img() *ebiten.Image
 	// rotation in radians
@@ -41,11 +41,21 @@ func (c *Camera) RenderToScreen(thing RenderableAsset, screen *ebiten.Image) {
 }
 
 func (c *Camera) localTransformationOfAssetImage(thing RenderableAsset, geom *ebiten.GeoM) {
-	scl := c.Scale * thing.Scale()
 	w := float64(thing.Img().Bounds().Dx())
 	h := float64(thing.Img().Bounds().Dy())
 	geom.Translate(-w/2, -h/2)
 	geom.Rotate(thing.Rot())
+
+	// we'll always work with squares but just for safety
+	scalar := w
+	if h > scalar {
+		scalar = h
+	}
+
+	op := thing.Rad() / scalar
+
+	scl := c.Scale * op
+
 	geom.Scale(scl, scl)
 }
 

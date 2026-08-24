@@ -11,11 +11,12 @@ import (
 
 type Player struct {
 	Position *geometry.Vec2
-	Rotation float64
-	Size     float64
-	Tile     *ebiten.Image
+	Radius   float64
 
 	Velocity *geometry.Vec2
+
+	Rotation float64
+	Tile     *ebiten.Image
 
 	ShipPower         float64
 	ShipDrag          float64
@@ -28,14 +29,15 @@ func NewPlayer(ass assets.Provider) *Player {
 		Position: &geometry.Vec2{
 			X: 0, Y: 0,
 		},
+		Radius: 30,
 		// in Radians
 		Rotation: 0,
-		Size:     0.5,
-		Tile:     ass.PlayerShip(),
 
 		Velocity: &geometry.Vec2{
 			X: 0, Y: 0,
 		},
+
+		Tile: ass.PlayerShip(),
 
 		ShipPower:         0.5,
 		ShipDrag:          0.1,
@@ -55,8 +57,8 @@ func (p *Player) Pos() *geometry.Vec2 {
 }
 
 // Scale implements [rendering.RenderableAsset].
-func (p *Player) Scale() float64 {
-	return p.Size
+func (p *Player) Rad() float64 {
+	return p.Radius
 }
 
 // Scale implements [rendering.RenderableAsset].
