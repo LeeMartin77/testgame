@@ -46,5 +46,7 @@ func (w *WorldState) Draw(screen *ebiten.Image) {
 func (w *WorldState) Update(input *input.PlayerInput) error {
 	w.camera.ApplyZoomChange(input.CamZoom)
 	w.player.Update(input)
+
+	ApplyVelocity(w.player)
 	return nil
 }

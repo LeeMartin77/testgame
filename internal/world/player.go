@@ -56,6 +56,10 @@ func (p *Player) Pos() *geometry.Vec2 {
 	return p.Position
 }
 
+func (p *Player) Vel() *geometry.Vec2 {
+	return p.Velocity
+}
+
 // Scale implements [rendering.RenderableAsset].
 func (p *Player) Rad() float64 {
 	return p.Radius
@@ -75,24 +79,20 @@ func (p *Player) Update(input *input.PlayerInput) {
 		p.Velocity.X = p.Velocity.X + (-1 * dragScale * p.Velocity.X)
 		p.Velocity.Y = p.Velocity.Y + (-1 * dragScale * p.Velocity.Y)
 	}
-
-	p.Position.X += p.Velocity.X
-	p.Position.Y += p.Velocity.Y
-
 }
 
+// returns if ship under thrust
 func (p *Player) handleInput(input *input.PlayerInput) bool {
-	speedadd := float64(0)
 	if input.Vec.Y > 0 {
-		speedadd = input.Vec.Y * p.ShipPower
+		speedadd := input.Vec.Y * p.ShipPower
+
+		speedadd = (1 - ILerp(0, p.ShipSpeedLimit, p.Velocity.Magnitude())) * speedadd
+
+		p.Velocity.X += speedadd * math.Sin(p.Rotation)
+		p.Velocity.Y += -1 * speedadd * math.Cos(p.Rotation)
 	}
-
-	speedadd = (1 - ILerp(0, p.ShipSpeedLimit, p.Velocity.Magnitude())) * speedadd
-
-	p.Velocity.X += speedadd * math.Sin(p.Rotation)
-	p.Velocity.Y += -1 * speedadd * math.Cos(p.Rotation)
-
 	p.Rotation += input.Rot * p.ShipRotationSpeed
+
 	return input.Vec.Y > 0
 }
 
