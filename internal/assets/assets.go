@@ -11,6 +11,7 @@ import (
 type Provider interface {
 	ShipsTiles() *ebiten.Image
 	PlayerShip() *ebiten.Image
+	Target() *ebiten.Image
 }
 
 type providerState struct {
@@ -21,6 +22,11 @@ type providerState struct {
 // PlayerShip implements [Provider].
 func (p *providerState) PlayerShip() *ebiten.Image {
 	ps := p.ships.SubImage(image.Rect(0, 0, 32, 32)).(*ebiten.Image)
+	return ps
+}
+
+func (p *providerState) Target() *ebiten.Image {
+	ps := p.ships.SubImage(image.Rect(64, 64, 32, 32)).(*ebiten.Image)
 	return ps
 }
 

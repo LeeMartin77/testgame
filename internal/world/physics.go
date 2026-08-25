@@ -1,6 +1,9 @@
 package world
 
-import "github.com/leemartin77/testgame/internal/geometry"
+import (
+	"github.com/leemartin77/testgame/internal/geometry"
+	"github.com/leemartin77/testgame/internal/rendering"
+)
 
 // All things shalt be perfect circles
 // in classic physics simplification
@@ -15,6 +18,11 @@ type PhysicsObject interface {
 	RotSpd() float64
 	Rot() float64
 	SetRot(float64)
+}
+
+type RenderablePhysicsObject interface {
+	rendering.RenderableAsset
+	PhysicsObject
 }
 
 func ApplyPhysics(po PhysicsObject) {
